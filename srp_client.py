@@ -1,8 +1,6 @@
 from binascii import hexlify
-
 from utils import randbits, group_constants
 from utils import _hash as H
-
 
 class Client:
     def __init__(self):
@@ -16,7 +14,7 @@ class Client:
         """Takes a username and password and returns a tuple
         of (salt, v)
         """
-        self.username = username
+        self.I = username
         s = randbits(64)
         x = H(s, password)
         v = pow(self.g, x, self.N)
@@ -33,25 +31,37 @@ class Client:
         self.a = a
         A = pow(self.g, a, self.N)
         self.A = A
-        return (self.username, A)
+        return (self.I, A)
 
     def compute_secret(self, password, s, B):
         self.s = s
         self.B = B
         u = H(self.A, B)
-        # TODO check conditions
+        # assertions required by SRP-6
+        # TODO test in hostile circumstances
+        assert u != 0
+        assert B % self.N != 0
+
         x = H(s, password) 
         N, g, k, a  = self.N, self.g, self.k, self.a
         S_c = pow(B - k*pow(g, x, N), a + u*x, N)
-
         self.S = S_c
-        print S_c
         K_c = H(S_c)
+        self.K = K_c
         return K_c
 
+    def generate_M1(self):
+        N, g, I,  = self.N, self.g, self.I
+        s, A, B, K = self.s, self.A, self.B, self.K
+        M1 = H(H(N) ^H(g), H(I), s, A, B, K)
+        self.M1 = M1
+        return M1
 
-
+    def verify_M2(self, M2):
+        A, M1, K = self.A, self.M1, self.K  
+        M2_c = H(A, M1, K)
+        assert M2 == M2_c
+        
 if __name__ == '__main__':
     c = Client()
     c.test_est()
-

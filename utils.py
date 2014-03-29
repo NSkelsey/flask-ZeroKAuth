@@ -14,11 +14,12 @@ def _hash(*args):
     which are either strings or int (converted to hex)"""
     def upd(h, val):
         typ = type(val)
+        #print typ,':', val
         assert typ == int or typ == str or typ == long
         if typ == int or typ == long:
             h.update(hex(val))
         else:
-            h.update(hexlify(val))
+            h.update(val)
         return h
     # Just call str on input then pass into our hash function
     _hex = reduce(upd, args, hashlib.sha256()).hexdigest()
