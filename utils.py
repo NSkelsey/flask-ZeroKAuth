@@ -5,8 +5,8 @@ import hashlib
 
 
 def randbits(n=512):
-    """input number of bits and get back that many random bits"""
-    return random.SystemRandom().getrandbits(n)
+    """input number of bits and get back that many random bits as a long"""
+    return long(random.SystemRandom().getrandbits(n))
 
 
 def _hash(*args):
@@ -14,10 +14,11 @@ def _hash(*args):
     which are either strings or int (converted to hex)"""
     def upd(h, val):
         typ = type(val)
-        #print typ,':', val
         assert typ == int or typ == str or typ == long
-        if typ == int or typ == long:
-            h.update(hex(val))
+        if typ == int:
+            h.update(hex(val)[2:])
+        elif typ == long:
+            h.update(hex(val)[2:-1])
         else:
             h.update(val)
         return h
@@ -35,7 +36,8 @@ def group_constants():
 
 
 if __name__ == '__main__':
-    assert _hash('doge') == 28088777564775743774903282203516146997506500108233848107224846866863036396859L
+    print _hash('doge')
+    assert _hash('doge') == 89062479946239498583283658615240302315455651348145828341129845111945473878501
     N, g, k = group_constants()
     assert k == 80910912930494333589932475365044532708556454027074488358013717185805616192253 
 

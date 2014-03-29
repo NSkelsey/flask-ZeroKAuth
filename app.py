@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column, String, LargeBinary, create_engine
-engine = create_engine('sqlite:///test.db', echo=True)
+engine = create_engine('sqlite:///test.db',) #echo=True)
 Session = sessionmaker(bind=engine)
 
 
@@ -19,12 +19,27 @@ import struct
 
 pp = pprint.PrettyPrinter()
 
-#TODO delete me
+#TODO document me
 SEC_PARAMS = dict()
 
 @app.route('/')
 def home():
     return "This is my great webserver!"
+
+@app.route('/login')
+def login():
+    return render_template('/login.html')
+
+#TODO DECORATE to check session cookie
+@app.route('/admin')
+def admin():
+    return render_template('/admin.html')
+
+@app.route('/logout')
+def logout():
+    """Deletes session cookie forcing user to reauth"""
+
+    return "You are now logged out"
 
 
 # ESTABLISHMENT; here we receive s,v from the client and store it
@@ -38,28 +53,21 @@ def create():
         s = Session()
         s.add(new_u)
         s.commit()
-
+        s.close()
         return "User created: " + uname
     else:
         return render_template('/create.html')
 
 
 # AUTHENTICATION; here we validate an existing user
-@app.route('/login')
-def login():
-    return render_template('/login.html')
-
 # client posts I, A, server responds with s, B
 @app.route('/handshake', methods=['POST'])
 def handshake():
     data = request.get_json()
     uname = str(data['username'])
     A = data['A']
-    creds = get_user_credentials(uname)
-    if creds is None:
-        raise ValueError("bad credentials")
-    s, v = unpack(creds)
-    veri = Verifier(s=s, v=v, I=uname)
+    s, v = get_user_credentials(uname)
+    veri = Verifier(s=long(s), v=v, I=uname)
     (s, B) = veri.compute_B(A)
 
     store_user_handshake_state(uname, veri.params())
@@ -74,20 +82,16 @@ def verify():
     uname = str(data['username'])
     state = get_user_handshake_state(uname)
     veri = Verifier(**state)
+    veri.compute_secret()
     M1 = data['M1']
     try:
         veri.verify_M1(M1)
     except AssertionError:
-       # print "M1's do not match"
-       # print 'GEND M1 ', veri.M1
-       # print 'RECD M1 ', M1
-       # print 'SERV SECRET: ', veri.S
-        print "="*50
-        pp.pprint(veri.__dict__)
-        print "="*50
-        return "M1's do not match bailing"
+        print "M1's do not match or M1 is not of type long"
+        return "Bailing out of interaction"
     
     M2 = veri.compute_M2()
+    # need to set a session key
 
     return jsonify({'M2': M2})
     
@@ -95,27 +99,21 @@ def verify():
 # There is a subtle bug in here, some S's are not getting through....
 # packs s, v for blob storage
 def pack(creds):
-    s, v = creds['s'], creds['v']
-    # 64 bit salt
+    s, v = long(creds['s']), creds['v']
+    assert type(s) == long and type(v) == long
+    # Strips longs of trailing L
     b_s = struct.pack('>Q', s)
-    # 128 bit v binary repr
-    b_v = a2b_hex(hex(v)[2:-1]) 
-    #assert len(b_s) == 8
-    #assert len(b_v) >= 16
+    b_v = a2b_hex(hex(v)[2:-1])
+    assert len(b_s) == 8
+    assert len(b_v) >= 16
     return b_s + b_v
     
-
 # unpacks s, v from blob storage
-def unpack(creds):
-    b_s = creds[:8]
-    # struck.unpack wants to return a tuple
-    s = struct.unpack('>Q', b_s)[0]
-    b_v = creds[8:]
+def unpack(raw):
+    b_s = raw[:8]
+    s = long(struct.unpack('>Q', b_s)[0])
+    b_v = raw[8:]
     v = long(hexlify(b_v), 16)
-    print "LENGTHS"
-    print "s %d, v %d" % (len(hex(s)), len(hex(v)))
-    #assert len(b_s) == 8
-    #assert len(b_v) >= 16
     return (s, v)
 
 
@@ -125,7 +123,8 @@ def get_user_credentials(uname):
     """Given a user name return the (s, v) we stored on account creation"""
     s = Session()
     user_obj = s.query(User).filter_by(name=uname).first()
-    return user_obj.credentials
+    s.close()
+    return unpack(user_obj.credentials)
 
 def get_user_handshake_state(uname):
     """ returns a dict of the users security params after a valid handshake"""

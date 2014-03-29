@@ -10,13 +10,19 @@ class Verifier:
         self.g = g
         self.k = k
 
+        assert type(self.s) == long
+
     def store_user(self, username, tup):
-        """Stores username, tup in Server object
-        where tup is (s, v)"""
+        """Initializes verifier object with (I s,v)"""
+        s, v = tup
+        assert type(s) == long and type(v) == long
+
         self.s, self.v = tup
         self.I = username
 
     def compute_B(self, A):
+        """Derives B and returns (s, B)"""
+        assert type(A) == long   
 
         # assertions required by SRP-6
         assert A % self.N != 0
@@ -35,12 +41,12 @@ class Verifier:
         u = H(A, B)
         S_s = pow(A * pow(v, u, N), b, N)
         self.S = S_s
-        #print S_s
         K_s = H(S_s)
         self.K = K_s
         return K_s
 
     def verify_M1(self, M1):
+        assert type(M1) == long
         I, s = self.I, self.s
         N, g  = self.N, self.g
         A, B, K = self.A, self.B, self.K
