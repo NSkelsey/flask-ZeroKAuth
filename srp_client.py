@@ -18,6 +18,7 @@ class Client:
         s = randbits(64)
         x = H(s, password)
         v = pow(self.g, x, self.N)
+        self.v = v
         return (s, v) 
 
     def test_est(self):
@@ -53,7 +54,7 @@ class Client:
     def generate_M1(self):
         N, g, I,  = self.N, self.g, self.I
         s, A, B, K = self.s, self.A, self.B, self.K
-        M1 = H(H(N) ^H(g), H(I), s, A, B, K)
+        M1 = H(H(N) ^ H(g), H(I), s, A, B, K)
         self.M1 = M1
         return M1
 

@@ -1,4 +1,5 @@
 import sys
+import pprint
 
 from flask import Flask, jsonify
 from flask import request, render_template
@@ -15,6 +16,8 @@ Session = sessionmaker(bind=engine)
 from srp_server import Verifier
 from binascii import hexlify, a2b_hex
 import struct
+
+pp = pprint.PrettyPrinter()
 
 #TODO delete me
 SEC_PARAMS = dict()
@@ -59,7 +62,6 @@ def handshake():
     veri = Verifier(s=s, v=v, I=uname)
     (s, B) = veri.compute_B(A)
 
-    print veri.compute_secret()
     store_user_handshake_state(uname, veri.params())
 
     return jsonify({'s':s, 'B':B})
@@ -69,11 +71,21 @@ def handshake():
 @app.route('/verify', methods=['POST'])
 def verify():
     data = request.get_json()
-    uname = data['username']
+    uname = str(data['username'])
     state = get_user_handshake_state(uname)
     veri = Verifier(**state)
     M1 = data['M1']
-    veri.verify_M1(M1)
+    try:
+        veri.verify_M1(M1)
+    except AssertionError:
+       # print "M1's do not match"
+       # print 'GEND M1 ', veri.M1
+       # print 'RECD M1 ', M1
+       # print 'SERV SECRET: ', veri.S
+        print "="*50
+        pp.pprint(veri.__dict__)
+        print "="*50
+        return "M1's do not match bailing"
     
     M2 = veri.compute_M2()
 
@@ -88,6 +100,8 @@ def pack(creds):
     b_s = struct.pack('>Q', s)
     # 128 bit v binary repr
     b_v = a2b_hex(hex(v)[2:-1]) 
+    #assert len(b_s) == 8
+    #assert len(b_v) >= 16
     return b_s + b_v
     
 
@@ -100,6 +114,8 @@ def unpack(creds):
     v = long(hexlify(b_v), 16)
     print "LENGTHS"
     print "s %d, v %d" % (len(hex(s)), len(hex(v)))
+    #assert len(b_s) == 8
+    #assert len(b_v) >= 16
     return (s, v)
 
 
