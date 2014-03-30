@@ -15,7 +15,6 @@ def create_user(cli, password):
     print resp.text
 
 
-
 def do_handshake(cli):
     uname, A = cli.compute_A()
     payload = json.dumps({'username': uname, 'A': A})
@@ -31,7 +30,7 @@ def try_verify(cli):
     try:
         js = resp.json()
         M2 = js['M2']
-        return cli.verify_M2(M2)
+        return resp.cookies
     except ValueError:
         import pprint
         pp = pprint.PrettyPrinter()
@@ -40,7 +39,8 @@ def try_verify(cli):
         print "="*50
         return False
 
-    
+
+COOKS = None
 
 if __name__ == '__main__':
 
@@ -53,7 +53,16 @@ if __name__ == '__main__':
 
     cli.compute_secret(pw, s, B)
 
-    if try_verify(cli):
+    out = try_verify(cli)
+    COOKS = out
+    if out:
         print "User Successfully authenticated"
+        resp = requests.get(BASE + '/admin', cookies=out)
+        print resp.text
+        print "LOGGING OUT"
+        resp = requests.get(BASE + '/logout', cookies=resp.cookies)
+        print "TRYING RESTRICTED SPOT"
+        resp = requests.get(BASE + '/admin',  cookies=resp.cookies)
+        print resp.text
     else:
         print "Verification failed"

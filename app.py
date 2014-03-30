@@ -1,10 +1,12 @@
 import sys
 import pprint
+from datetime import datetime, timedelta
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, session, abort
 from flask import request, render_template
 
 app = Flask(__name__)
+app.secret_key = "electric horse battery toothpaste"
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column, String, LargeBinary, create_engine
@@ -17,10 +19,39 @@ from srp_server import Verifier
 from binascii import hexlify, a2b_hex
 import struct
 
+
 pp = pprint.PrettyPrinter()
 
-#TODO document me
+# This is a cheap key value store that would 
+# need to replaced by something like redis
 SEC_PARAMS = dict()
+
+
+from functools import wraps
+
+def login_required(func):
+    """A login forcing decorator"""
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        u_id = session.get('user_id')
+        if u_id is not None: 
+            print "logged in!"
+            return func(*args, **kwargs)
+        else:
+            out = func(*args, **kwargs)
+            print "login was no good"
+            return abort(403)
+    return decorator
+
+def _set_user_session(user_id):
+    """Setups a users session cookies for future access"""
+    session['user_id'] = user_id
+
+def _remove_user_session():
+    return session.pop('user_id', None) is not None
+
+def logout_user():
+    _remove_user_session()
 
 @app.route('/')
 def home():
@@ -30,15 +61,15 @@ def home():
 def login():
     return render_template('/login.html')
 
-#TODO DECORATE to check session cookie
 @app.route('/admin')
+@login_required
 def admin():
     return render_template('/admin.html')
 
 @app.route('/logout')
 def logout():
     """Deletes session cookie forcing user to reauth"""
-
+    logout_user() 
     return "You are now logged out"
 
 
@@ -91,7 +122,8 @@ def verify():
         return "Bailing out of interaction"
     
     M2 = veri.compute_M2()
-    # need to set a session key
+
+    _set_user_session(uname)
 
     return jsonify({'M2': M2})
     
