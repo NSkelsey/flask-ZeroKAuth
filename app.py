@@ -1,5 +1,6 @@
 import sys
 import pprint
+import os
 from datetime import datetime, timedelta
 
 from flask import Flask, jsonify, session, abort
@@ -26,6 +27,18 @@ SEC_PARAMS = dict()
 @app.route('/')
 def home():
     return "This is my great webserver!"
+
+@app.route('/register')
+def register():
+    return render_template('/register.html')
+
+# to serve the static javascript files:
+if app.config['DEBUG']:
+    from werkzeug import SharedDataMiddleware
+    import os
+    app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {
+      '/': os.path.join(os.path.dirname(__file__), 'static')
+    })
 
 @app.route('/login')
 def login():
