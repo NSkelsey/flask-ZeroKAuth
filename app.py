@@ -59,8 +59,11 @@ def logout():
 #### FUNCTIONS A LIBRARY-USER MUST DEFINE ####
 @login_manager.commit_user
 def commit_user_on_create(uname, creds):
-    new_u = User(uname, 'Cheese', creds) 
     s = Session()
+    i_exist = s.query(User).filter_by(name=uname).first()
+    if i_exist is not None:
+        return False
+    new_u = User(uname, 'Cheese', creds) 
     s.add(new_u)
     s.commit()
     s.close()
@@ -71,9 +74,11 @@ def get_user_credentials(uname):
     """Given a user name returns the (s, v) we stored on account creation"""
     s = Session()
     user_obj = s.query(User).filter_by(name=uname).first()
-    assert user_obj is not None
     s.close()
-    return user_obj.credentials
+    if user_obj is None:
+        return None
+    else:
+        return user_obj.credentials
 
 @login_manager.get_handshake
 def get_user_handshake_state(uname):

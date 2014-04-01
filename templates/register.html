@@ -9,78 +9,16 @@
 
         <script type="text/javascript">
 
-            var hexString_N = null;
-            var N = null;
-            var g = null;
-            var k = null;
-            var k_decimal = null;
+        function init(){
+            var carol = new Client();
+            console.log(carol.k.toString(10));
 
-            var username = null;
-            var password = null;
+            username = document.getElementById("username").value;
+            password = document.getElementById("password").value;
 
-            //param args must be list
-            function _hash(args){
-                function upd(accumulator, element){
-                    var hex_element = null;
+            carol.createAccount("REMOVEME", "My safe PW");
 
-                    if(typeof(element) === "object" && element.constructor == BigInteger){
-                        hex_element = element.toString(16);
-                    }
-                    else if(typeof(element) === "number"){
-                        hex_element = element.toString(16);
-                    }
-                    else if(typeof(element) === "string"){
-                        hex_element = element;
-                    }
-                    else{
-                        throw "_hash element type not valid";
-                    }
-                    return accumulator + hex_element;
-                }
-
-                var hashparam = args.reduce(upd);
-                var hashvalue = CryptoJS.SHA256("A4122").toString();
-                var bigResult = new BigInteger(hashvalue, 16);
-
-                return bigResult;
-            }
-
-
-            function init() {
-                var hash = CryptoJS.SHA256("doge");
-                document.getElementById('hashValue').innerHTML=hash;
-                
-                hexString_N = 'EEAF0AB9ADB38DD69C33F80AFA8FC5E86072618775FF3C0B9EA2314C9C256576D674DF7496EA81D3383B4813D692C6E0E0D5D8E250B98BE48E495C1D6089DAD15DC7D7B46154D6B6CE8EF4AD69B15D4982559B297BCF1885C529F566660E57EC68EDBC3C05726CC02FD4CBF4976EAA9AFD5138FE8376435B9FC61D2FC0EB06E3';
-                N = new BigInteger(hexString_N, 16);
-                document.getElementById('N').innerHTML=N;
-                g = 2;
-                console.log(N.toString());
-                console.log(g);
-                k = _hash([N.toString(10),g]);
-                
-                // testhash = CryptoJS.SHA256("A4122");
-                // document.getElementById('testhash').innerHTML=testhash;
-
-                // correcthash = _hash(["A412", 2]);
-                // document.getElementById('correcthash').innerHTML=correcthash;
-
-
-                // k_decimal = new BigInteger(k, 16);
-                // document.getElementById('k_decimal').innerHTML=k_decimal;
-
-                document.getElementById('hexString_N').innerHTML=hexString_N;
-                document.getElementById('N').innerHTML=N;
-                document.getElementById('g').innerHTML=g;
-                document.getElementById('k').innerHTML=k;
-
-
-            }
-
-            function onSubmit() {
-                username = document.getElementById("username").value;
-                password = document.getElementById("password").value;
-                
-            }
+        }
 
         </script>
 
@@ -93,41 +31,5 @@
             <input type="password" id="password">
             <button type="button" onclick="onSubmit()">Register</button>
         </form>
-
-        <br>
-        Hash value of doge:
-        <div id="hashValue"></div>
-
-        <br>
-        hexString_N:
-        <div id="hexString_N"></div>
-
-        <br>
-        N:
-        <div id="N"></div>
-
-        <br>
-        g:
-        <div id="g"></div>
-
-        <br>
-        k:
-        <div id="k"></div>
-
-<!--         <br>
-        testhash:
-        <div id="testhash"></div>
-
-        <br>
-        correcthash:
-        <div id="correcthash"></div> -->
-
-
-
-<!--         <br>
-        k_decimal:
-        <div id="k_decimal"></div> -->
-
     </body>
-
 </html>

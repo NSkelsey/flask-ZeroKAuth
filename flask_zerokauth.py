@@ -13,7 +13,9 @@ from srp_server import Verifier
 
 
 # CONFIGS
+import pprint
 
+pp = pprint.PrettyPrinter()
 
 class LoginManager(object):
 
@@ -51,6 +53,15 @@ class LoginManager(object):
         return callback
 
 
+def process_inc(raw_dict):
+    """This function processes incoming json and converts all hex strings in the provided dict into longs and ints and returns a new dict with those values properly formatted"""
+    clean_dict = {}
+    for k, v in raw_dict.iteritems():
+        assert type(v) == unicode
+        clean_dict[k] = long(v, 16)
+    return clean_dict
+
+
 # CUSTOM ROUTING FUNCTIONS -- THIS IS THE SRP PROTOCOL
 
 # ESTABLISHMENT; here we receive s,v from the client and store it
@@ -59,8 +70,12 @@ def create():
         # TODO check for bad data
         data = request.get_json()
         uname = data['username']
-        creds = pack(data['credentials'])
-        if current_app.login_manager.commit_user_callback(uname, creds):
+        _dict = process_inc(data['credentials'])
+        print _dict
+        creds = pack(_dict)
+        worked = current_app.login_manager.commit_user_callback(uname, creds)
+        # TODO add more checks here
+        if worked:
             return "User created: " + uname
         else:
             print "User creation failed hard"
@@ -97,6 +112,7 @@ def verify():
         veri.verify_M1(M1)
     except AssertionError:
         print "M1's do not match or M1 is not of type long"
+        pp.pprint(veri.__dict__)
         return "Bailing out of interaction"
     
     M2 = veri.compute_M2()

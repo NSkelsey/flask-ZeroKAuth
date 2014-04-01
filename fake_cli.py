@@ -3,20 +3,24 @@ import json
 import random
 
 from srp_client import Client
+from utils import _hex
 
 BASE = "http://127.0.0.1:5000"
 HEADS = {'Content-Type': 'application/json', 'Accept': 'text/plain'}
 
-def create_user(cli, password):
-    uname = 'hickerman' + str(random.randint(0, 4**4**2))
-    s, v = cli.establish(uname, password)      
-    payload = {'credentials': {'s': s,'v': v}, 'username': uname}
+
+
+def create_user(cli, uname, password):
+    s, v = cli.establish(password)      
+    payload = {'credentials': {'s': _hex(s),'v': _hex(v)}, 'username': uname}
+    print payload
     resp = requests.post(BASE + '/create', data=json.dumps(payload), headers=HEADS)
     print resp.text
+    return resp
 
 
-def do_handshake(cli):
-    uname, A = cli.compute_A()
+def do_handshake(cli, uname):
+    A = cli.compute_A(uname)
     payload = json.dumps({'username': uname, 'A': A})
     resp = requests.post(BASE + '/handshake', data=payload, headers=HEADS)
     js = resp.json()
@@ -44,12 +48,15 @@ COOKS = None
 
 if __name__ == '__main__':
 
-    pw = "God this pw is so safe"
     cli = Client()
 
-    create_user(cli, pw)
+    username = 'jajajaja' + str(random.randint(0,5000))
+    pw = "My safe PW"
+    resp = create_user(cli, username, pw)
+    #if resp.status_code != 200:
+    import sys; sys.exit()
 
-    s, B = do_handshake(cli)
+    s, B = do_handshake(cli, username)
 
     cli.compute_secret(pw, s, B)
 

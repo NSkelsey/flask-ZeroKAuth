@@ -10,15 +10,13 @@ class Client:
         self.g = g
         self.k = k
 
-    def establish(self, username, password):
-        """Takes a username and password and returns a tuple
+    def establish(self, password):
+        """Takes a password and returns a tuple
         of (salt, v)
         """
         assert type(password) == str
-        assert type(username) == str
-        self.I = username
         s = long(randbits(64))
-        x = H(s, password)
+        x = H(s, ":", password)
         v = pow(self.g, x, self.N)
         self.v = v
         return (s, v) 
@@ -29,12 +27,14 @@ class Client:
         s, v = self.establish(uname, pw)
         print uname, (s, v)
 
-    def compute_A(self):
+    def compute_A(self, username):
+        assert type(username) == str
         a = randbits()
         self.a = a
+        self.I = username
         A = pow(self.g, a, self.N)
         self.A = A
-        return (self.I, A)
+        return A
 
     def compute_secret(self, password, s, B):
         """Computes the shared secret with pw, s and B
