@@ -47,8 +47,10 @@
                 document.getElementById('nothing').innerHTML=nothing;
 
                 var hashparam = args.reduce(upd, "");
-                var bigResult = new BigInteger(hashparam, 16);
-
+                var hashresult = CryptoJS.SHA256(hashparam).toString();
+                console.log('hashresult ', hashresult);
+                var bigResult = new BigInteger(hashresult.toString(), 16);
+                console.log('bigresult ', bigResult.toString());
                 return bigResult;
             }
 
