@@ -18,6 +18,8 @@
             var username = null;
             var password = null;
 
+            var username_pad = null;
+
             //param args must be list
             function _hash(args){
                 function upd(accumulator, element){
@@ -42,16 +44,20 @@
                     console.log("accumulator + hex_element", accumulator + hex_element);
                     return accumulator + hex_element;
                 }
-                // console.log("hash of nothing: ", CryptoJS.SHA256(""));
-                var nothing = CryptoJS.SHA256("");
-                document.getElementById('nothing').innerHTML=nothing;
 
                 var hashparam = args.reduce(upd, "");
                 var hashresult = CryptoJS.SHA256(hashparam).toString();
+                var bigResult = new BigInteger(hashresult, 16);
+
                 console.log('hashresult ', hashresult);
-                var bigResult = new BigInteger(hashresult.toString(), 16);
                 console.log('bigresult ', bigResult.toString());
+
                 return bigResult;
+            }
+
+
+            function getRandomInt(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
             }
 
 
@@ -79,16 +85,6 @@
                 console.log("k      | ", k);
                 console.log("----------------------------------------------------------");
 
-                
-                // testhash = CryptoJS.SHA256("A4122");
-                // document.getElementById('testhash').innerHTML=testhash;
-
-                // correcthash = _hash(["A412", 2]);
-                // document.getElementById('correcthash').innerHTML=correcthash;
-
-
-                // k_decimal = new BigInteger(k, 16);
-                // document.getElementById('k_decimal').innerHTML=k_decimal;
 
                 document.getElementById('hexString_N').innerHTML=hexString_N;
                 document.getElementById('N').innerHTML=N;
@@ -101,6 +97,10 @@
             function onSubmit() {
                 username = document.getElementById("username").value;
                 password = document.getElementById("password").value;
+
+                username_pad = username + getRandomInt(0, Math.pow(256, 2));
+                salt = getRandomInt(0, Math.pow)
+                document.getElementById('username_pad').innerHTML=username_pad;
                 
             }
 
@@ -137,21 +137,20 @@
         <div id="k"></div>
 
         <br>
-        hash of nothing:
-        <div id="nothing"></div>
-<!--         <br>
-        testhash:
-        <div id="testhash"></div>
+        username_pad (I):
+        <div id="username_pad"></div>
 
         <br>
-        correcthash:
-        <div id="correcthash"></div> -->
+        salt:
+        <div id="salt"></div>
 
+        <br>
+        x = hash(s, p)
+        <div id="x"></div>
 
-
-<!--         <br>
-        k_decimal:
-        <div id="k_decimal"></div> -->
+        <br>
+        v = g^x
+        <div id="v"></div>
 
     </body>
 

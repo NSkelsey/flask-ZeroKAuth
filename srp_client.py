@@ -18,6 +18,7 @@ class Client:
         assert type(username) == str
         self.I = username
         s = long(randbits(64))
+        print 'SALT  |', s
         x = H(s, password)
         v = pow(self.g, x, self.N)
         self.v = v
