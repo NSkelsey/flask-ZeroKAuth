@@ -60,6 +60,38 @@ function Client() {
         var request = new XMLHttpRequest();
         request.open('POST', '/create', true);
         request.setRequestHeader('Content-Type', 'application/json');
-        request.send(d_as_json)
+        request.send(d_as_json); //i added a semicolon here idk is this how JS works?
     };
+    this.authenticate = function(username){};
+        this.handshake = function(username){
+            var a_hex = CryptoJS.lib.WordArray.random(512/8).toString();
+            //having both upper and lower case is not 
+            var a = new BigInteger(a_hex, 16);
+            var A = new BigInteger(g.toString(10), 10);
+            A = A.modPow(a, N);
+
+            console.log("a: ", this.a.toString(16));
+            console.log("A: ", this.A.toString(16));
+
+            var payload = {'username': username,
+                           // v is a hex str
+                           'A': this.A.toString(16)
+                           };
+            var d_as_json = JSON.stringify(payload);
+            console.log(d_as_json);
+
+            var request = new XMLHttpRequest();
+            request.onload = reqListener;
+            request.open('POST', '/handshake', true);
+            request.setRequestHeader('Content-Type', 'application/json');
+            request.send(d_as_json);
+
+            function reqListener () {
+                console.log(this.responseText);
+                console.log('test: ', a.toString());
+                console.log('v from: ', v.toString());
+                JSON.parse(string);
+            }
+
+        };
 }

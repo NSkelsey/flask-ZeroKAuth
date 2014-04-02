@@ -16,7 +16,11 @@
             username = document.getElementById("username").value;
             password = document.getElementById("password").value;
 
-            carol.createAccount("float_username: " + Math.random(), "My safe PW");
+            // hardcoded username and pasword for 
+            var username = "float_username: " + Math.random();
+            var password = "mypasswordsucks"
+            carol.createAccount(username, password);
+            carol.handshake(username);
 
         }
 
