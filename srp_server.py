@@ -10,24 +10,16 @@ class Verifier:
         self.g = g
         self.k = k
 
-        assert type(self.s) == long
-
-    def store_user(self, username, tup):
-        """Initializes verifier object with (I s,v)"""
-        s, v = tup
-        assert type(s) == long and type(v) == long
-
-        self.s, self.v = tup
-        self.I = username
-
-    def compute_B(self, A):
+    def compute_B(self, A, s, v):
         """Derives B and returns (s, B)"""
         assert type(A) == long   
+        assert type(s) == long
+        assert type(v) == long
 
         # assertions required by SRP-6
         assert A % self.N != 0
         self.A = A
-        s, v = self.s, self.v
+        self.s, self.v = s, v
         b = randbits() 
         self.b = b
 
@@ -39,6 +31,7 @@ class Verifier:
         A, N, b, B = self.A, self.N, self.b, self.B
         v = self.v
         u = H(A, B)
+        print u
         S_s = pow(A * pow(v, u, N), b, N)
         self.S = S_s
         K_s = H(S_s)
@@ -64,25 +57,37 @@ class Verifier:
         """A cheap hack for now"""
         return self.__dict__
 
+def params_equal(client, server):
+    """asserts that all of the objects shared attributes are equal"""
+    c = client.__dict__
+    s = client.__dict__
+
+    for k, v in c.iteritems():
+        if k in s:
+            assert v == s[k], "Key: %s is not equal:\nC:%s\t\nS:%s\t\n" % (k, v, s[k])
+
 if __name__ == '__main__':
     from srp_client import Client
     carol = Client()
+    username, password = 'carol', 'thisisecure'
     server = Verifier()
     # Establishment
-    s, v = carol.establish('carol', 'thisissecure')
-    server.store_user('carol', (s, v))
+    s, v = carol.establish(username)
 
     # Authentication
-    I, A = carol.compute_A()
+    A = carol.compute_A(username)
     
-    s, B = server.compute_B(A)
+    s, B = server.compute_B(A=A, s=s, v=v)
     
-    kc = carol.compute_secret('thisissecure', s, B)
+    kc = carol.compute_secret(password, s=s, B=B)
 
     ks = server.compute_secret()
+    params_equal(carol, server)
     assert kc == ks
+
 
     M1 = carol.generate_M1()
     server.verify_M1(M1)
     M2 = server.compute_M2()
     carol.verify_M2(M2)
+

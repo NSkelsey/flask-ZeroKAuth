@@ -10,6 +10,7 @@ from flask import _app_ctx_stack
 
 # local imports
 from srp_server import Verifier
+from utils import _hex
 
 
 # CONFIGS
@@ -53,12 +54,19 @@ class LoginManager(object):
         return callback
 
 
-def process_inc(raw_dict):
-    """This function processes incoming json and converts all hex strings in the provided dict into longs and ints and returns a new dict with those values properly formatted"""
+def process_inc(raw_dict, num_elems):
+    """This function processes incoming json and converts all hex strings in the provided dict into longs and returns a new dict with those values properly formatted. It also coerces the username field into a string"""
     clean_dict = {}
+    assert len(raw_dict) == num_elems, "%s has wrong num of elements" % str(raw_dict)
     for k, v in raw_dict.iteritems():
-        assert type(v) == unicode
-        clean_dict[k] = long(v, 16)
+        assert type(v) == unicode, "%s's value has wrong type." % k
+        if k == u'username':
+            clean_dict[k] = str(v)
+        else:
+            try:
+                clean_dict[k] = long(v, 16)
+            except ValueError:
+                raise AssertionError("Value: %s should be a hex str" % v)
     return clean_dict
 
 
@@ -68,11 +76,15 @@ def process_inc(raw_dict):
 def create():
     if request.method == 'POST':
         # TODO check for bad data
-        data = request.get_json()
-        uname = data['username']
-        _dict = process_inc(data['credentials'])
-        print _dict
-        creds = pack(_dict)
+        c_dict = request.get_json()
+        try:
+            c_dict = process_inc(c_dict, 3)
+        except AssertionError as e:
+            print e
+            abort(400)
+        uname = c_dict['username']
+        # pass pack a dict of s, v
+        creds = pack(c_dict)
         worked = current_app.login_manager.commit_user_callback(uname, creds)
         # TODO add more checks here
         if worked:
@@ -87,58 +99,62 @@ def create():
 # AUTHENTICATION; here we validate an existing user
 # client posts I, A, server responds with s, B
 def handshake():
-    data = request.get_json()
-    uname = str(data['username'])
-    A = data['A']
+    c_dict = request.get_json()
+    try:
+        c_dict = process_inc(c_dict, 2)
+    except AssertionError:
+        abort(400)
+    uname = c_dict['username']
+    A = c_dict['A']
     _raw = current_app.login_manager.get_credentials_callback(uname) 
     s, v = unpack(_raw)
-    veri = Verifier(s=long(s), v=v, I=uname)
+    veri = Verifier(s=s, v=v, I=uname)
     (s, B) = veri.compute_B(A)
 
     current_app.login_manager.store_handshake_callback(uname, veri.params())
 
-    return jsonify({'s':s, 'B':B})
+    return jsonify({'s': _hex(s), 'B': _hex(B)})
 
 
 # client posts M1, server responds with M2
 def verify():
-    data = request.get_json()
-    uname = str(data['username'])
+    c_dict = request.get_json()
+    try:
+        c_dict = process_inc(c_dict, 2)
+    except AssertionError:
+        abort(400)
+    uname = c_dict['username']
     state = current_app.login_manager.get_handshake_callback(uname)
     veri = Verifier(**state)
     veri.compute_secret()
-    M1 = data['M1']
+    M1 = c_dict['M1']
     try:
         veri.verify_M1(M1)
     except AssertionError:
         print "M1's do not match or M1 is not of type long"
         pp.pprint(veri.__dict__)
-        return "Bailing out of interaction"
+        abort(403)
     
     M2 = veri.compute_M2()
-
     _set_user_session(uname)
 
-    return jsonify({'M2': M2})
+    return jsonify({'M2': _hex(M2)})
     
 
-# packs s, v for blob storage
+# packs s, v for hex string storage
 def pack(creds):
-    s, v = long(creds['s']), creds['v']
+    s, v = creds['s'], creds['v']
     assert type(s) == long and type(v) == long
     # Strips longs of trailing L
-    b_s = struct.pack('>Q', s)
-    b_v = a2b_hex(hex(v)[2:-1])
-    assert len(b_s) == 8
-    assert len(b_v) >= 16
-    return b_s + b_v
+    b_s = _hex(s)
+    b_v = _hex(v)
+    return b_s + '|' + b_v
     
-# unpacks s, v from blob storage
+# unpacks s, v from hex str storage
 def unpack(raw):
-    b_s = raw[:8]
-    s = long(struct.unpack('>Q', b_s)[0])
-    b_v = raw[8:]
-    v = long(hexlify(b_v), 16)
+    b_s, b_v = raw.split('|')
+    s = long(b_s, 16)
+    v = long(b_v, 16)
     return (s, v)
 
 def _set_user_session(user_id):

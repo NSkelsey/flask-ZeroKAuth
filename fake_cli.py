@@ -12,7 +12,7 @@ HEADS = {'Content-Type': 'application/json', 'Accept': 'text/plain'}
 
 def create_user(cli, uname, password):
     s, v = cli.establish(password)      
-    payload = {'credentials': {'s': _hex(s),'v': _hex(v)}, 'username': uname}
+    payload = {'s': _hex(s),'v': _hex(v), 'username': uname}
     print payload
     resp = requests.post(BASE + '/create', data=json.dumps(payload), headers=HEADS)
     print resp.text
@@ -21,19 +21,19 @@ def create_user(cli, uname, password):
 
 def do_handshake(cli, uname):
     A = cli.compute_A(uname)
-    payload = json.dumps({'username': uname, 'A': A})
+    payload = json.dumps({'username': uname, 'A': _hex(A)})
     resp = requests.post(BASE + '/handshake', data=payload, headers=HEADS)
     js = resp.json()
-    s, B = long(js['s']), js['B']
+    s, B = long(js['s'], 16), long(js['B'], 16)
     return (s, B)
 
 def try_verify(cli):
     M1 = cli.generate_M1()
-    payload = json.dumps({'username': cli.I, 'M1': M1})
+    payload = json.dumps({'username': cli.I, 'M1': _hex(M1)})
     resp = requests.post(BASE + '/verify', data=payload, headers=HEADS)
     try:
         js = resp.json()
-        M2 = js['M2']
+        M2 = long(js['M2'], 16)
         return resp.cookies
     except ValueError:
         import pprint
@@ -53,8 +53,8 @@ if __name__ == '__main__':
     username = 'jajajaja' + str(random.randint(0,5000))
     pw = "My safe PW"
     resp = create_user(cli, username, pw)
-    #if resp.status_code != 200:
-    import sys; sys.exit()
+    if resp.status_code != 200:
+        import sys; sys.exit()
 
     s, B = do_handshake(cli, username)
 

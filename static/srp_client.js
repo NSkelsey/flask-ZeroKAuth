@@ -48,11 +48,12 @@ function Client() {
         console.log("s: ", salt);
         console.log("v: ", this.v.toString(16));
 
-        var payload = {'credentials' : 
-                        // s is a hex str
-                        // v is a hex str
-                        {'s': salt, 'v': this.v.toString(16)},
-                       'username' : username};
+        var payload = { // s is a hex str
+                       's': salt,
+                       // v is a hex str
+                       'v': this.v.toString(16),
+                       'username' : username
+                       };
         var d_as_json = JSON.stringify(payload);
         console.log(d_as_json);
 

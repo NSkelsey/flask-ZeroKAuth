@@ -16,12 +16,8 @@ def _hash(*args):
     def upd(acc, val):
         typ = type(val)
         assert typ == int or typ == str or typ == long
-        if typ == int:
-            # chops 0x off of str
-            acc += hex(val)[2:]
-        elif typ == long:
-            # chops 0x..L off of str
-            acc += hex(val)[2:-1]
+        if typ == int or typ == long:
+            acc += _hex(val)
         else:
             acc += val
         return acc
@@ -29,8 +25,8 @@ def _hash(*args):
  #  print "="*50
  #  print hashp
  #  print "="*50
-    _hex = hashlib.sha256(hashp).hexdigest()
-    return long(_hex, 16)
+    digest = hashlib.sha256(hashp).hexdigest()
+    return long(digest, 16)
 
 def group_constants():
     """Returns the defined group constants for our implementation"""
@@ -42,10 +38,10 @@ def group_constants():
     return (N, g, k)
 
 def _hex(val):
-    """Takes an integer or a long and removes pythons hex formatting"""
+    """Takes an integer or a long and removes python's hex formatting
+    returning just the hex vals and nothing more"""
     typ = type(val)
     assert typ == long or typ == int
-    
     if typ == long:
         return hex(val)[2:-1]
     else:

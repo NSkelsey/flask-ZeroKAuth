@@ -30,6 +30,7 @@ def home():
 
 @app.route('/register')
 def register():
+    """Account creation template/view"""
     return render_template('/register.html')
 
 # to serve the static javascript files:
@@ -42,6 +43,7 @@ if app.config['DEBUG']:
 
 @app.route('/login')
 def login():
+    """The view that asks users to log the template should use the login form macro"""
     #TODO insert JS macros into template
     return render_template('/login.html')
 
@@ -104,7 +106,7 @@ class User(Base):
 
     name = Column(String, primary_key=True)
     fav_pizza = Column(String)
-    credentials = Column(LargeBinary)
+    credentials = Column(String)
 
     def __init__(self, n, p, creds):
         self.name, self.fav_pizza = n, p
