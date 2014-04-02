@@ -10,20 +10,17 @@ class Verifier:
         self.g = g
         self.k = k
 
-    def compute_B(self, A, s, v):
+    def compute_B(self, A):
         """Derives B and returns (s, B)"""
         assert type(A) == long   
-        assert type(s) == long
-        assert type(v) == long
 
         # assertions required by SRP-6
         assert A % self.N != 0
         self.A = A
-        self.s, self.v = s, v
         b = randbits() 
         self.b = b
 
-        B = (self.k * v + pow(self.g, b, self.N)) % self.N
+        B = (self.k * self.v + pow(self.g, b, self.N)) % self.N
         self.B = B
         return (s, B)
 
@@ -31,7 +28,6 @@ class Verifier:
         A, N, b, B = self.A, self.N, self.b, self.B
         v = self.v
         u = H(A, B)
-        print u
         S_s = pow(A * pow(v, u, N), b, N)
         self.S = S_s
         K_s = H(S_s)
@@ -44,7 +40,6 @@ class Verifier:
         N, g  = self.N, self.g
         A, B, K = self.A, self.B, self.K
         M1_s = H(H(N) ^ H(g), H(I), s, A, B, K)
-        print M1_s
         self.M1 =  M1_s
         assert M1 == M1_s
 
@@ -70,16 +65,16 @@ if __name__ == '__main__':
     from srp_client import Client
     carol = Client()
     username, password = 'carol', 'thisisecure'
-    server = Verifier()
     # Establishment
-    s, v = carol.establish(username)
+    s, v = carol.establish(password=password)
 
     # Authentication
-    A = carol.compute_A(username)
+    A = carol.compute_A(username=username)
     
-    s, B = server.compute_B(A=A, s=s, v=v)
+    server = Verifier(s=s, v=v, I=username)
+    s1, B = server.compute_B(A=A)
     
-    kc = carol.compute_secret(password, s=s, B=B)
+    kc = carol.compute_secret(password=password, s=s, B=B)
 
     ks = server.compute_secret()
     params_equal(carol, server)
@@ -87,7 +82,7 @@ if __name__ == '__main__':
 
 
     M1 = carol.generate_M1()
-    server.verify_M1(M1)
+    server.verify_M1(M1=M1)
     M2 = server.compute_M2()
     carol.verify_M2(M2)
 

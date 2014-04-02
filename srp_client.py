@@ -15,8 +15,9 @@ class Client:
         of (salt, v)
         """
         assert type(password) == str
-        s = long(randbits(64))
-        x = H(s, ":", password)
+        s = randbits(64)
+        x = compute_x(s, password)
+        self.x = x
         v = pow(self.g, x, self.N)
         self.v = v
         return (s, v) 
@@ -45,13 +46,13 @@ class Client:
         self.s = s
         self.B = B
         u = H(self.A, B)
-        print u
         # assertions required by SRP-6
         # TODO test in hostile circumstances
         assert u != 0
         assert B % self.N != 0
 
-        x = H(s, ':', password) 
+        x = compute_x(s, password)
+         
         N, g, k, a  = self.N, self.g, self.k, self.a
         S_c = pow(B - k*pow(g, x, N), a + u*x, N)
         self.S = S_c
@@ -72,7 +73,11 @@ class Client:
         M2_c = H(A, M1, K)
         assert M2 == M2_c
         return M2 == M2_c
-        
+     
+def compute_x(s, password):
+    x = H(s, password)
+    return x
+
 if __name__ == '__main__':
     c = Client()
     c.test_est()
