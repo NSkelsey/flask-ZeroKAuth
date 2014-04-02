@@ -1,4 +1,3 @@
 SQLAlchemy
-Flask-KVSession
 flask
 requests

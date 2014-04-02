@@ -14,13 +14,24 @@ from utils import _hex
 
 
 # CONFIGS
-import pprint
 
+# DEBUG
+import pprint
 pp = pprint.PrettyPrinter()
 
 class LoginManager(object):
 
-    def __init__(self, app=None):
+    def __init__(self, app=None, api_path=""):
+        """
+        Initializes a LoginManager with an optional app object. 
+        :param app: The optional :class: `flask.Flask` object to configure
+        :type app: :class: `flask.Flask`
+        :param api_path: The url path that the zka views live under, an 
+        example would be api_path="/srp_proto".
+        :type api_path: str
+        """
+        self.base_api_path = api_path
+
         if app is not None:
             self.init_app(app)
 
@@ -31,11 +42,21 @@ class LoginManager(object):
         self.store_handshake_callback = None
 
     def init_app(self, app):
+        """
+        Configures an app with all the needed routes for the srp protocol 
+        to function correctly. Note there are several callbacks that need 
+        to be defined as well for the plugin to work correctly
+        :param app: The optional :class: `flask.Flask` object to configure
+        :type app: :class: `flask.Flask`
+        :param api_path: The url path that the zka views live under
+        :type api_path: str
+        """
         app.login_manager = self
+        base_p = self.base_api_path
         # route registration
-        app.add_url_rule('/create', 'create', create, methods=['GET', 'POST'])
-        app.add_url_rule('/handshake', 'handshake', handshake, methods=['POST'])
-        app.add_url_rule('/verify', 'verify', verify, methods=['POST'])
+        app.add_url_rule(base_p + '/create', 'create', create, methods=['GET', 'POST'])
+        app.add_url_rule(base_p + '/handshake', 'handshake', handshake, methods=['POST'])
+        app.add_url_rule(base_p + '/verify', 'verify', verify, methods=['POST'])
 
     def commit_user(self, callback):
         self.commit_user_callback = callback
@@ -55,7 +76,10 @@ class LoginManager(object):
 
 
 def process_inc(raw_dict, num_elems):
-    """This function processes incoming json and converts all hex strings in the provided dict into longs and returns a new dict with those values properly formatted. It also coerces the username field into a string"""
+    """This function processes incoming json and converts all hex strings 
+    in the provided dict into longs and returns a new dict with those values 
+    properly formatted. It also coerces the username field into a string
+    """
     clean_dict = {}
     assert len(raw_dict) == num_elems, "%s has wrong num of elements" % str(raw_dict)
     for k, v in raw_dict.iteritems():
@@ -71,29 +95,24 @@ def process_inc(raw_dict, num_elems):
 
 
 # CUSTOM ROUTING FUNCTIONS -- THIS IS THE SRP PROTOCOL
-
 # ESTABLISHMENT; here we receive s,v from the client and store it
 def create():
-    if request.method == 'POST':
-        # TODO check for bad data
-        c_dict = request.get_json()
-        try:
-            c_dict = process_inc(c_dict, 3)
-        except AssertionError as e:
-            print e
-            abort(400)
-        uname = c_dict['username']
-        # pass pack a dict of s, v
-        creds = pack(c_dict)
-        worked = current_app.login_manager.commit_user_callback(uname, creds)
-        # TODO add more checks here
-        if worked:
-            return "User created: " + uname
-        else:
-            print "User creation failed hard"
-            abort(400)
+    c_dict = request.get_json()
+    try:
+        c_dict = process_inc(c_dict, 3)
+    except AssertionError as e:
+        print e
+        abort(400)
+    uname = c_dict['username']
+    # pass pack a dict of s, v
+    creds = pack(c_dict)
+    worked = current_app.login_manager.commit_user_callback(uname, creds)
+    # TODO add more checks here
+    if worked:
+        return "User created: " + uname
     else:
-        return render_template('/create.html')
+        print "User creation failed hard"
+        abort(400)
 
 
 # AUTHENTICATION; here we validate an existing user
@@ -143,6 +162,11 @@ def verify():
 
 # packs s, v for hex string storage
 def pack(creds):
+    """
+    Packs a dict of credentials for storage as a hex string
+    :param creds: A dict object containing s and v as keys to hex strs
+    :type creds: :class: dict
+    """
     s, v = creds['s'], creds['v']
     assert type(s) == long and type(v) == long
     # Strips longs of trailing L

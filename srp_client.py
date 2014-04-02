@@ -75,7 +75,7 @@ class Client:
         return M2 == M2_c
      
 def compute_x(s, password):
-    x = H(s, password)
+    x = H(s, ':', password)
     return x
 
 if __name__ == '__main__':

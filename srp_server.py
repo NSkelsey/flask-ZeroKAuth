@@ -3,6 +3,10 @@ from utils import _hash as H
 
 class Verifier:
     def __init__(self, **kwargs):
+        """
+        Initializes a verifier object from the given keyword args
+        to run compute be we need s, A, I
+        """
         for key in kwargs:
             setattr(self, key, kwargs[key])
         N, g, k = group_constants()
@@ -22,9 +26,12 @@ class Verifier:
 
         B = (self.k * self.v + pow(self.g, b, self.N)) % self.N
         self.B = B
-        return (s, B)
+        return (self.s, B)
 
     def compute_secret(self):
+        """
+        Computes the servers secret using its updated internal state
+        """
         A, N, b, B = self.A, self.N, self.b, self.B
         v = self.v
         u = H(A, B)

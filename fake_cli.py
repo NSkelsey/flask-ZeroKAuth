@@ -54,6 +54,7 @@ if __name__ == '__main__':
     pw = "My safe PW"
     resp = create_user(cli, username, pw)
     if resp.status_code != 200:
+        print 'died at creation'
         import sys; sys.exit()
 
     s, B = do_handshake(cli, username)
