@@ -1,5 +1,4 @@
 import random
-from binascii import hexlify
 import os
 import hashlib
 

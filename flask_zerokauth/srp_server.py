@@ -1,5 +1,5 @@
-from utils import group_constants, randbits
-from utils import _hash as H
+from .utils import group_constants, randbits
+from .utils import _hash as H
 
 class Verifier:
     def __init__(self, **kwargs):

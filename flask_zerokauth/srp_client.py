@@ -1,6 +1,5 @@
-from binascii import hexlify
-from utils import randbits, group_constants
-from utils import _hash as H
+from .utils import randbits, group_constants
+from .utils import _hash as H
 
 class Client:
     def __init__(self):

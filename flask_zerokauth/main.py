@@ -2,15 +2,14 @@ __version__ = '0.0.1'
 __author__ = 'Nick Skelsey'
 
 import struct
-from binascii import hexlify, a2b_hex
 from functools import wraps
 
 from flask import current_app, session, abort, request, jsonify
 from flask import _app_ctx_stack 
 
 # local imports
-from srp_server import Verifier
-from utils import _hex
+from .srp_server import Verifier
+from .utils import _hex
 
 
 # CONFIGS
@@ -57,6 +56,14 @@ class LoginManager(object):
         app.add_url_rule(base_p + '/create', 'create', create, methods=['GET', 'POST'])
         app.add_url_rule(base_p + '/handshake', 'handshake', handshake, methods=['POST'])
         app.add_url_rule(base_p + '/verify', 'verify', verify, methods=['POST'])
+
+        # TODO better static import strategy
+        from werkzeug import SharedDataMiddleware
+        import os
+        app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {
+          '/': os.path.join(os.path.dirname(__file__), 'static')
+        })
+
 
     def commit_user(self, callback):
         self.commit_user_callback = callback

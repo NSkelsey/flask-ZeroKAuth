@@ -2,8 +2,8 @@ import requests
 import json
 import random
 
-from srp_client import Client
-from utils import _hex
+from flask_zerokauth.srp_client import Client   
+from flask_zerokauth.utils import _hex
 
 BASE = "http://127.0.0.1:5000"
 HEADS = {'Content-Type': 'application/json', 'Accept': 'text/plain'}
