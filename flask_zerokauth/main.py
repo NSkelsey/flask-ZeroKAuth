@@ -139,6 +139,11 @@ def handshake():
 
     current_app.login_manager.store_handshake_callback(uname, veri.params())
 
+    # for testing XMLRequest timeout---------#
+    # import time                              #
+    # time.sleep(1)                            #
+    # ---------------------------------------#
+
     return jsonify({'s': _hex(s), 'B': _hex(B)})
 
 

@@ -10,8 +10,8 @@
         <script type="text/javascript">
 
         function init(){
-            var carol = new Client();
-            console.log(carol.k.toString(10));
+            // var carol = new Client();
+            // console.log(carol.k.toString(10));
 
             username = document.getElementById("username").value;
             password = document.getElementById("password").value;
@@ -19,8 +19,12 @@
             // hardcoded username and pasword for 
             var username = "float_username: " + Math.random();
             var password = "mypasswordsucks"
-            carol.createAccount(username, password);
-            carol.handshake(username);
+            createAccount(username, password);
+            handshake(username, password);
+
+
+            // carol.createAccount(username, password);
+            // carol.handshake(username);
 
         }
 
