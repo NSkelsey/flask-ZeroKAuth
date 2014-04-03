@@ -1,0 +1,108 @@
+%% LyX 2.0.7.1 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{luainputenc}
+\usepackage[paperwidth=11in,paperheight=11in]{geometry}
+\usepackage{amsmath}
+
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+%% Because html converters don't know tabularnewline
+\providecommand{\tabularnewline}{\\}
+
+\makeatother
+
+\usepackage{babel}
+\begin{document}
+
+\part*{SRP-6a}
+
+
+\section{Establishment:}
+
+
+\paragraph*{This is the process by which a client on behalf of a user creates
+an account on a server. }
+
+
+\paragraph*{NOTE: H is SHA256. N and g must be chosen with care. H(s,
+p) is really H(s, ':', p)}
+
+
+\paragraph*{$N=2q-1$ where q is a safe prime}
+
+
+\paragraph*{%
+\begin{tabular}{|c|c||c||c||c|c|c|}
+\hline 
+Client & \multicolumn{4}{c|}{Public} & Server & Notes\tabularnewline
+\hline 
+\hline 
+ & \multicolumn{4}{c|}{$H,N,g,k=H(N,g)$} &  & Both parties should already have\tabularnewline
+\hline 
+$I\leftarrow UsernameLand,p\leftarrow PasswordLand$ & \multicolumn{4}{c|}{} &  & User picks username and password\tabularnewline
+\hline 
+$s\leftarrow\$,x=H(s,p)$ & \multicolumn{4}{c|}{} &  & Added protection\tabularnewline
+\hline 
+$v=g^{x}\mod N$  & \multicolumn{4}{c|}{$I,s,v$} &  & \tabularnewline
+\hline 
+ & \multicolumn{4}{c|}{} & $Store(I,(s,v))$ & Server uses I as key\tabularnewline
+\hline 
+\end{tabular}}
+
+
+\paragraph*{The server is now storing $(H,N,g,(I,(s,v)))$}
+
+
+\section{Authentication:}
+
+
+\paragraph{This is the process by which a server and client can establish a
+secure, authenticated session amongst themselves.}
+
+\begin{tabular}{|c|c|c|c|}
+\hline 
+Client & Public & Server & Notes\tabularnewline
+\hline 
+\hline 
+$a\leftarrow\$,A=g^{a}$ & $I,A$ &  & a must be a 256 bit rand\tabularnewline
+\hline 
+ &  & abort if: $A\mod N=0$ & \tabularnewline
+\hline 
+ & $s,B$  & $B=kv+g^{b}$ & b must be a 256 bit rand\tabularnewline
+\hline 
+$u=H(A,B)$ &  & $u=H(A,B)$ & B must be revealed after A {[}2{]}\tabularnewline
+\hline 
+abort if: $u=0\vee B\mod N=0$ &  &  & Prevents dropping terms of $S_{c}$\tabularnewline
+\hline 
+$p\in\{p|p\in UserBrain\}$ &  &  & Ask for users password\tabularnewline
+\hline 
+$x=H(s,p)$ &  &  & \tabularnewline
+\hline 
+$S_{c}=(B-kg^{x})^{(a+ux)}$ &  & $S_{s}=(Av^{u})^{b}$ & Compute shared secret\tabularnewline
+\hline 
+$K_{c}=H(S_{c})$ &  & $K_{s}=H(S_{s})$ & Hash S\tabularnewline
+\hline 
+$M_{1}=H(H(N)\oplus H(g)|H(I)|s|A|B|K_{c})$ & $M_{1}$ &  & Client sends first;\tabularnewline
+\hline 
+ &  & Verifies $M_{1}$ otherwise abort & \tabularnewline
+\hline 
+ & $M_{2}$ & $M_{2}=H(A|M_{1}|K_{s})$ & Server deletes stored params\tabularnewline
+\hline 
+Verifies $M_{2}$ &  &  & \tabularnewline
+\hline 
+\end{tabular}
+
+
+\paragraph{The shared secret is now $S_{c}$ and the client has proven that
+it knows $x$}
+\begin{thebibliography}{00.00.0000}
+\bibitem[http://en.wikipedia.org/wiki/SecureRemotePasswordprotocol]{1}
+
+\bibitem[http://srp.stanford.edu/ndss.html]{2}
+
+\bibitem[http://tools.ietf.org/html/rfc5054]{3}\end{thebibliography}
+
+\end{document}
