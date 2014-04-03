@@ -6,7 +6,7 @@ function _hash(){
     function upd(accumulator, element){
         var hex_element = null;
 
-        if(typeof(element) === "object" && element.constructor == BigInteger){
+        if(typeof(element) === "object" && element.constructor === BigInteger){
             // console.log("bigint");
             hex_element = element.toString(16);
         }
@@ -33,15 +33,24 @@ function _hash(){
 }
 
 function groupConstants(){
-    var g = "2";
-    var hexString_N = 'EEAF0AB9ADB38DD69C33F80AFA8FC5E86072618775FF3C0B9EA2314C9C256576D674DF7496EA81D3383B4813D692C6E0E0D5D8E250B98BE48E495C1D6089DAD15DC7D7B46154D6B6CE8EF4AD69B15D4982559B297BCF1885C529F566660E57EC68EDBC3C05726CC02FD4CBF4976EAA9AFD5138FE8376435B9FC61D2FC0EB06E3';
-    return [g, hexString_N];
+    var constants = {
+        g_decstring: '2',
+        N_hexstring: 'EEAF0AB9ADB38DD69C33F80AFA8FC5E86072618775FF3C0B9EA2314C9C256576D674DF7496EA81D3383B4813D692C6E0E0D5D8E250B98BE48E495C1D6089DAD15DC7D7B46154D6B6CE8EF4AD69B15D4982559B297BCF1885C529F566660E57EC68EDBC3C05726CC02FD4CBF4976EAA9AFD5138FE8376435B9FC61D2FC0EB06E3'
+    };
+    return constants;
+
+    // var g_decstring = '2';
+    // var N_hexstring = 'EEAF0AB9ADB38DD69C33F80AFA8FC5E86072618775FF3C0B9EA2314C9C256576D674DF7496EA81D3383B4813D692C6E0E0D5D8E250B98BE48E495C1D6089DAD15DC7D7B46154D6B6CE8EF4AD69B15D4982559B297BCF1885C529F566660E57EC68EDBC3C05726CC02FD4CBF4976EAA9AFD5138FE8376435B9FC61D2FC0EB06E3';
+    // g = new BigInteger(g_decstring, 10);
+    // N = new BigInteger(g_hexstring, 16);
+    // return [g_decstring, N_hexstring];
+    // return[g, N];
 }
 
 function createAccount(username, password){
-    var constants_array = groupConstants();
-    var g = new BigInteger(constants_array[0], 10);
-    var N = new BigInteger(constants_array[1], 16);
+    var constants = groupConstants();
+    var g = new BigInteger(constants.g_decstring, 10);
+    var N = new BigInteger(constants.N_hexstring, 16);
     var k = _hash(N, g);
 
     var salt = CryptoJS.lib.WordArray.random(64/8).toString();
@@ -68,14 +77,29 @@ function createAccount(username, password){
 
 function handshake(username, password){
     //get groupConstants, g and N, and represent them using BigIntegers
-    var constants_array = groupConstants();
-    var g = new BigInteger(constants_array[0], 10);
-    var N = new BigInteger(constants_array[1], 16);
+    // var constants_array = groupConstants();
+    // var g = new BigInteger(constants_array[0], 10);
+    // var N = new BigInteger(constants_array[1], 16);
+    var constants = groupConstants();
+    var g = new BigInteger(constants.g_decstring, 10);
+    var N = new BigInteger(constants.N_hexstring, 16);
 
     //generate random a; use to find A = g^x
     var a_hex = CryptoJS.lib.WordArray.random(512/8).toString();
     var a = new BigInteger(a_hex, 16);
     var A = g.modPow(a, N)
+
+
+    // var a = generate_a_A.a;
+    // var A = generate_a_A.A;
+    // function generate_a_A(N){
+    //     var a_hex = CryptoJS.lib.WordArray.random(512/8).toString();
+    //     var results = {
+    //         var a = new BigInteger(a_hex, 16);
+    //         var A = g.modPow(a, N)
+    //     };
+    //     return results;
+    // }
 
     console.log("a: ", a.toString(16));
     console.log("A: ", A.toString(16));
@@ -145,10 +169,10 @@ function verify(username, password, g, N, A, a, s, B){
 
     //odd the hardness of the entire scheme relies upon these two if statements
     //i presume the entire scheme relies upon every statement
-    if(u == 0){
+    if(u === 0){
         abort('u = _hash(a, b) equated zero');
     }
-    if(B.remainder(N) == 0){
+    if(B.remainder(N) === 0){
         abort('B mod N equated zero');
     }
 
@@ -186,7 +210,7 @@ function verify(username, password, g, N, A, a, s, B){
         M2 = JSON.parse(this.responseText);
     }
     
-    //
+
 
     console.log('Verify Computations---------------------------------------------');
     console.log('x           | ', x.toString());
