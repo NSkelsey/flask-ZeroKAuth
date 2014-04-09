@@ -1,0 +1,48 @@
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+
+        
+            Included JS for ZKA
+
+
+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+<script>
+    {{sha256}}
+</script>
+<script>
+    {{jsbn}}
+</script>
+<script>
+    {{srp_client}}
+</script>
+
+<script>
+// Registration JS
+
+var userInput = document.getElementById("{{uI}}"),
+    passInput = document.getElementById("{{pI}}"),
+    formId = document.getElementById("{{fI}}");
+
+
+    function subHandler(e) {
+        if (e.preventDefault) e.preventDefault();
+        username = userInput.value
+        password = passInput.value
+        console.log(username);
+        console.log(password);
+        createAccount(username, password);
+        console.log('fired');
+        return false;
+
+    };
+
+    formId.addEventListener("submit", subHandler);
+
+</script>
+
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    
+            Thats all folks!
+
+
+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->

@@ -41,6 +41,11 @@ if app.config['DEBUG']:
       '/': os.path.join(os.path.dirname(__file__), 'static')
     })
 
+@app.route('/test')
+def test():
+
+    return render_template('/create.html')
+
 @app.route('/login')
 def login():
     """The view that asks users to log the template should use the login form macro"""

@@ -64,6 +64,9 @@ class LoginManager(object):
           '/': os.path.join(os.path.dirname(__file__), 'static')
         })
 
+        # adds template functions
+        app.context_processor(_add_template_funcs)
+
 
     def commit_user(self, callback):
         self.commit_user_callback = callback
@@ -80,6 +83,37 @@ class LoginManager(object):
     def store_handshake(self, callback):
         self.store_handshake_callback = callback
         return callback
+
+def _add_template_funcs():
+    """Adds two functions into the template context making it easy to include the js"""
+    return dict(register_user=_register_func,
+                authenticate_user=_authenticate_func)
+
+def _register_func(username_sel, password_sel, submit_sel):
+    """This functions includes the javascript that powers the client side of user
+    registration. You MUST provide unique id selectors on the input fields for the username and 
+    password fields. Additionally this function will attach an onclick listener to the 
+    submit selector, which is the button someone clicks to create an account.
+    """
+    import os
+    from jinja2 import Environment
+    path = os.path.realpath(__file__) 
+    js_dir = os.path.join(os.path.split(path)[0], 'js')
+    register_temp = open(js_dir + '/register.html').read()
+    sha256 = open(js_dir + '/sha256.js').read()
+    jsbn = open(js_dir + '/jsbn.js').read()
+    srp_client = open(js_dir + '/srp_client.js').read()
+
+    env = Environment().from_string(register_temp)
+    return env.render(uI=username_sel,
+                              pI=password_sel,
+                              sB=submit_sel,
+                              sha256=sha256,
+                              jsbn=jsbn,
+                              srp_client=srp_client)
+
+def _authenticate_func():
+    return ""
 
 
 def process_inc(raw_dict, num_elems):

@@ -73,6 +73,7 @@ function createAccount(username, password){
     request.open('POST', '/create', true);
     request.setRequestHeader('Content-Type', 'application/json');
     request.send(d_as_json);
+
 }
 
 function handshake(username, password){

@@ -1,5 +1,7 @@
-<form action="/create" method="POST">
-    <input type="text" name="username">
-    <input type="password" name="password">
-    <input type="submit" value="Submit">
+<form id=myform  >
+    <input type="text" id=id  name="username">
+    <input type="password" id=derp name="password">
+    <input type="submit" id=subs value="Submit">
+
+    {{ register_user('id', 'derp', 'myform') | safe }}
 </form>
